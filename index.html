@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services de Chauffage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('votre_image.jpg'); /* Remplacez 'votre_image.jpg' par le nom de votre image */
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .tab { 
+            display: inline-block; 
+            margin-right: 10px; 
+            padding: 10px; 
+            background: #007BFF; 
+            color: white; 
+            cursor: pointer; 
+        }
+        .tab-content { 
+            display: none; 
+            padding: 20px; 
+            border: 1px solid #ddd; 
+            margin-top: 10px; 
+            background-color: rgba(255, 255, 255, 0.8); 
+        }
+        .tab-content img { 
+            margin-top: 10px; 
+            max-width: 100%; 
+        }
+        .active { 
+            display: block; 
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        .input-section input {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        .input-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .input-section button:hover {
+            background-color: #218838;
+        }
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+        .admin-section {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .admin-section button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .admin-input {
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+    <script>
+        var adminMode = false;
+
+        // Fonction pour afficher les onglets
+        function showTab(contentId) {
+            var contents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+            }
+            document.getElementById(contentId).classList.add('active');
+        }
+
+        // Fonction pour afficher les messages et les stocker dans localStorage
+        function showMessage() {
+            var userInput = document.getElementById('userInput').value;
+            var userName = document.getElementById('userName').value;
+            
+            if (userInput.trim() !== "" && userName.trim() !== "") { // S'assurer que les entrées ne sont pas vides
+                // Récupérer les messages actuels depuis localStorage (ou initialiser une liste vide)
+                var messages = JSON.parse(localStorage.getItem('userMessages')) || [];
+
+                // Ajouter le nouveau message avec le prénom à la liste
+                messages.push({ name: userName, message: userInput });
+
+                // Sauvegarder la liste mise à jour dans localStorage
+                localStorage.setItem('userMessages', JSON.stringify(messages));
+
+                // Mettre à jour l'affichage des messages
+                updateMessageDisplay();
+
+                // Effacer les champs de saisie
+                document.getElementById('userInput').value = "";
+                document.getElementById('userName').value = "";
+
+                // Afficher l'onglet "Message personnalisé"
+                showTab('service4');
+            } else {
+                alert("Veuillez entrer un prénom et un message.");
+            }
+        }
+
+        // Fonction pour supprimer un message spécifique
+        function deleteMessage(index) {
+            if (!adminMode) {
+                alert("Accès refusé. Activez le mode administrateur pour supprimer les messages.");
+                return;
+            }
+
+            var messages = JSON.parse(localStorage.getItem('userMessages')) || [];
+
+            // Supprimer le message à l'index donné
+            messages.splice(index, 1);
+
+            // Sauvegarder la liste mise à jour dans localStorage
+            localStorage.setItem('userMessages', JSON.stringify(messages));
+
+            // Mettre à jour l'affichage des messages
+            updateMessageDisplay();
+        }
+
+        // Fonction pour mettre à jour l'affichage des messages dans la rubrique "Message personnalisé"
+        function updateMessageDisplay() {
+            var messages = JSON.parse(localStorage.getItem('userMessages')) || [];
+            var messageContent = document.getElementById('message-content');
+
+            // Effacer les messages actuels avant d'ajouter les nouveaux
+            messageContent.innerHTML = "";
+
+            // Ajouter chaque message à la rubrique "Message personnalisé" avec un bouton "Supprimer" (si adminMode)
+            messages.forEach(function(entry, index) {
+                var p = document.createElement('p');
+                p.textContent = (index + 1) + ". " + entry.name + " : " + entry.message;
+
+                if (adminMode) {
+                    // Créer un bouton "Supprimer" pour chaque message si adminMode est activé
+                    var deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = "Supprimer";
+                    deleteBtn.classList.add('delete-button');
+                    deleteBtn.onclick = function() {
+                        deleteMessage(index);
+                    };
+
+                    p.appendChild(deleteBtn);
+                }
+
+                messageContent.appendChild(p);
+            });
+        }
+
+        // Charger les messages depuis localStorage à l'ouverture de la page
+        window.onload = function() {
+            updateMessageDisplay();
+        }
+
+        // Fonction pour afficher l'entrée du mot de passe administrateur
+        function showAdminLogin() {
+            document.getElementById('admin-input').style.display = 'block';
+        }
+
+        // Fonction pour valider le mot de passe administrateur
+        function validateAdmin() {
+            var password = document.getElementById('adminPassword').value;
+
+            if (password === "1234") {
+                adminMode = true;
+                alert("Mode administrateur activé.");
+                updateMessageDisplay(); // Met à jour les messages avec les options de suppression
+                document.getElementById('admin-input').style.display = 'none';
+            } else {
+                alert("Mot de passe incorrect.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Nos Services de Chauffage</h1>
+
+    <!-- Section administrateur -->
+    <div class="admin-section">
+        <button onclick="showAdminLogin()">Administrateur</button>
+        <div id="admin-input" class="admin-input">
+            <input type="password" id="adminPassword" placeholder="Entrez le mot de passe">
+            <button onclick="validateAdmin()">Valider</button>
+        </div>
+    </div>
+
+    <!-- Onglets -->
+    <div>
+        <div class="tab" onclick="showTab('service1')">Installation</div>
+        <div class="tab" onclick="showTab('service2')">Entretien</div>
+        <div class="tab" onclick="showTab('service3')">Réparation</div>
+        <div class="tab" onclick="showTab('service4')">Messages personnalisés</div>
+    </div>
+
+    <!-- Contenu des services -->
+    <div id="service1" class="tab-content">
+        <h2>Installation</h2>
+        <p>Installation de systèmes de chauffage modernes et efficaces.</p>
+        <p>Tarifs: 500€ - 2000€</p>
+        <img src="votre_image2.jpg" alt="Installation">
+    </div>
+    <div id="service2" class="tab-content">
+        <h2>Entretien</h2>
+        <p>Entretien régulier pour assurer le bon fonctionnement de vos systèmes de chauffage.</p>
+        <p>Tarifs: 100€ - 300€</p>
+        <img src="votre_image3.jpg" alt="Entretien">
+    </div>
+    <div id="service3" class="tab-content">
+        <h2>Réparation</h2>
+        <p>Réparation de tous types de systèmes de chauffage.</p>
+        <p>Tarifs: 150€ - 500€</p>
+        <img src="votre_image4.jpg" alt="Réparation">
+    </div>
+
+    <!-- Nouvelle rubrique pour afficher les messages personnalisés -->
+    <div id="service4" class="tab-content">
+        <h2>Messages personnalisés</h2>
+        <!-- Section d'entrée de texte avec le prénom et le message (affiché seulement dans cette rubrique) -->
+        <div class="input-section">
+            <input type="text" id="userName" placeholder="Entrez votre prénom">
+            <input type="text" id="userInput" placeholder="Entrez votre message ici">
+            <button onclick="showMessage()">Envoyer</button>
+        </div>
+        <div id="message-content">
+            <!-- Les messages s'afficheront ici -->
+        </div>
+    </div>
+</body>
+</html>
